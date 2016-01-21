@@ -9,6 +9,7 @@
 #include "ext_help.h"
 #include <assert.h>
 #include <string.h>
+#include <stdlib.h>
 #include "http11_parser.h"
 
 #ifndef MANAGED_STRINGS
@@ -37,6 +38,15 @@ static VALUE global_query_string;
 static VALUE global_http_version;
 static VALUE global_request_path;
 
+/** Read an environment variable, check if it exists, read size_t value or return default. */
+static size_t fetch_env(const char* name, size_t dvalue)
+{
+  const char* v = getenv(name);
+  if (v == NULL)
+    return dvalue;
+  return (size_t)atoi(v);
+}
+
 /** Defines common length and error messages for input length validation. */
 #define DEF_MAX_LENGTH(N,length) const size_t MAX_##N##_LENGTH = length; const char *MAX_##N##_LENGTH_ERR = "HTTP element " # N  " is longer than the " # length " allowed length (was %d)"
 
@@ -50,10 +60,10 @@ static VALUE global_request_path;
 /* Defines the maximum allowed lengths for various input elements.*/
 DEF_MAX_LENGTH(FIELD_NAME, 256);
 DEF_MAX_LENGTH(FIELD_VALUE, 80 * 1024);
-DEF_MAX_LENGTH(REQUEST_URI, 1024 * 12);
+DEF_MAX_LENGTH(REQUEST_URI, 1024 * 34);
 DEF_MAX_LENGTH(FRAGMENT, 1024); /* Don't know if this length is specified somewhere or not */
 DEF_MAX_LENGTH(REQUEST_PATH, 2048);
-DEF_MAX_LENGTH(QUERY_STRING, (1024 * 10));
+DEF_MAX_LENGTH(QUERY_STRING, (1024 * 32));
 DEF_MAX_LENGTH(HEADER, (1024 * (80 + 32)));
 
 struct common_field {
